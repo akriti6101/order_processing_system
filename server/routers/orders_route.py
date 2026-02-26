@@ -29,7 +29,7 @@ async def retrive_customer_orders(customer_id:str,db_con=Depends(get_db_connecti
             orders_list.append({'order_id':order.order_id,'customer_name':order.customer.name,'items':items_list,'total_bill':total_price,'status':order.status})
         return {'status_code':200,'orders':orders_list}
     except Exception as e:
-        raise HTTPException(status_code=400,details="Could not fetch customer's order")
+        raise HTTPException(status_code=400,detail="Could not fetch customer's order")
 
 
 @orders_router.get("/{order_id}")
@@ -39,7 +39,7 @@ async def retrive_order_details(order_id=Path(...),db_con=Depends(get_db_connect
         order={'order_id':order_obj.order_id,'customer':order_obj.customer,'status':order_obj.status,'items':order_obj.items}
         return {'status_code':200,'order':order}
     except Exception as e:
-        raise HTTPException(status_code=400,details="Could not fetch order details.")
+        raise HTTPException(status_code=400,detail="Could not fetch order details.")
 
 @orders_router.get("")
 async def retrive_all_order_details(status:Optional[str]=Query(None),db_con=Depends(get_db_connection)):
@@ -53,7 +53,7 @@ async def retrive_all_order_details(status:Optional[str]=Query(None),db_con=Depe
             orders_list.append({'order_id':order.order_id,'customer_name':order.customer.name,'customer_contact':order.customer.contact,'status':order.status})
         return {'status_code':200,'orders':orders_list}
     except Exception as e:
-        raise HTTPException(status_code=400,details="Could not fetch all orders")
+        raise HTTPException(status_code=400,detail="Could not fetch all orders")
 
 @orders_router.delete("/{customer_id}/{order_id}")
 async def cancel_order(order_id:str,customer_id:str,db_con=Depends(get_db_connection)):
@@ -66,4 +66,4 @@ async def cancel_order(order_id:str,customer_id:str,db_con=Depends(get_db_connec
             db_con.commit()
             return {'status_code':200,'message':"Your order is cancelled !"}
     except Exception as e:
-        raise HTTPException(status_code=400,details="Could not delete order")
+        raise HTTPException(status_code=400,detail="Could not delete order")
