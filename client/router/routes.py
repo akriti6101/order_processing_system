@@ -1,0 +1,7 @@
+ITEMS_ROUTE='http://127.0.0.1:8000/items'
+CUSTOMERS_ROUTE='http://127.0.0.1:8000/customers'
+PLACE_ORDER_ROUTE='http://127.0.0.1:8000/orders'
+ALL_ORDERS_ROUTE='http://127.0.0.1:8000/orders'
+ORDER_DETAIL_ROUTE='http://127.0.0.1:8000/orders/{order_id}'
+CUSTOMER_ORDER_ROUTE='http://127.0.0.1:8000/orders/customer/{customer_id}'
+CANCEL_ORDER_ROUTE='http://127.0.0.1:8000/orders/{customer_id}/{order_id}'
