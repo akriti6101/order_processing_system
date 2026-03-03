@@ -1,8 +1,9 @@
 from fastapi import APIRouter,Depends,Body,Path,HTTPException,Query
-from models.pydantic_models import OrderItem
+from models.pydantic_models import OrderItem,OrderPayment
 from typing import Optional
-from models.db_models import Orders,Items
-from utils.helper import get_db_connection,get_next_order_id
+from models.db_models import Orders,Items,Payment
+from utils.helper import get_db_connection,get_next_order_id,get_next_payment_id
+from datetime import datetime
 
 orders_router=APIRouter(prefix='/orders')
 
@@ -11,7 +12,7 @@ async def place_order(order:OrderItem=Body(...),db_con=Depends(get_db_connection
     try:
         order_id='ODR000'+str(get_next_order_id())
         items_obj = db_con.query(Items).filter(Items.item_id.in_([item.item_id for item in order.items])).all()
-        orders=Orders(order_id=order_id,customer_id=order.customer_id,status='PENDING',items=items_obj)
+        orders=Orders(order_id=order_id,customer_id=order.customer_id,total_amount=order.total_amount,status='PENDING',items=items_obj)
         db_con.add(orders)
         db_con.commit()
         return {'status_code':200,'message':'All orders placed.'}
@@ -36,7 +37,7 @@ async def retrive_customer_orders(customer_id:str,db_con=Depends(get_db_connecti
 async def retrive_order_details(order_id=Path(...),db_con=Depends(get_db_connection)):
     try:
         order_obj=db_con.query(Orders).filter(Orders.order_id==order_id).first()
-        order={'order_id':order_obj.order_id,'customer':order_obj.customer,'status':order_obj.status,'items':order_obj.items}
+        order={'order_id':order_obj.order_id,'customer':order_obj.customer,'bill':order_obj.total_amount,'status':order_obj.status,'items':order_obj.items}
         return {'status_code':200,'order':order}
     except Exception as e:
         raise HTTPException(status_code=400,detail="Could not fetch order details.")
@@ -50,7 +51,7 @@ async def retrive_all_order_details(status:Optional[str]=Query(None),db_con=Depe
             orders=db_con.query(Orders).filter(Orders.status==status).all()
         orders_list=[]
         for order in orders:
-            orders_list.append({'order_id':order.order_id,'customer_name':order.customer.name,'customer_contact':order.customer.contact,'status':order.status})
+            orders_list.append({'order_id':order.order_id,'customer_name':order.customer.name,'customer_contact':order.customer.contact,'bill':order.total_amount,'status':order.status})
         return {'status_code':200,'orders':orders_list}
     except Exception as e:
         raise HTTPException(status_code=400,detail="Could not fetch all orders")
@@ -67,3 +68,15 @@ async def cancel_order(order_id:str,customer_id:str,db_con=Depends(get_db_connec
             return {'status_code':200,'message':"Your order is cancelled !"}
     except Exception as e:
         raise HTTPException(status_code=400,detail="Could not delete order")
+    
+@orders_router.post("/payment")
+async def pay_for_order(payment:OrderPayment,db_con=Depends(get_db_connection)):
+    try:
+        pid='PAY000'+str(get_next_payment_id)
+        payment_obj=Payment(pid=pid,order_id=payment.order_id,customer_id=payment.customer_id,amount=payment.amount,date=payment.date)
+        db_con.add(payment_obj)
+        db_con.commit()
+        return {'status_code':200,'message':"Payment Successful"}
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=400,detail="Payment Failed !")

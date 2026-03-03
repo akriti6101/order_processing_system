@@ -3,9 +3,9 @@ This file is for storing the dummy data in customers table and items table.
 """
 
 from fastapi import APIRouter,Depends,HTTPException,Body
-from models.pydantic_models import Customer,Item
+from models.pydantic_models import Customer,Item,OrderPayment
 from typing import List
-from models.db_models import Customers,Items
+from models.db_models import Customers,Items,Payment
 from utils.helper import get_db_connection
 
 data_ingestion_routes=APIRouter()
@@ -13,8 +13,8 @@ data_ingestion_routes=APIRouter()
 @data_ingestion_routes.post("/customers")
 async def add_customers(customer:Customer=Body(...),db_con=Depends(get_db_connection)):
     try:
-        print(customer['customer_id'])
-        if db_con.query(Customers).filter(Customers.customer_id==customer['customer_id']).first() :
+        print(customer.customer_id)
+        if db_con.query(Customers).filter(Customers.customer_id==customer.customer_id).first() :
             raise HTTPException(status_code=400,detail="Customer already exists")
         else:
             customer_obj=Customers(**customer.dict())
@@ -22,6 +22,7 @@ async def add_customers(customer:Customer=Body(...),db_con=Depends(get_db_connec
             db_con.commit()
             return {'status_code':200,'message':'customer details added'}
     except Exception as e:
+        print(e)
         raise HTTPException(status_code=400,detail="Could not save customer details")
     
 @data_ingestion_routes.get("/customers")
@@ -61,6 +62,17 @@ async def get_items(db_con=Depends(get_db_connection)):
         return {'status_code':200,'items':items_list}
     except Exception as e:
         raise HTTPException(status_code=400,detail="Could not fetch items")
+    
+@data_ingestion_routes.get("/payments")
+async def get_payments(db_con=Depends(get_db_connection)):
+    try:
+        payments_list=[]
+        payments=db_con.query(Payment).all()
+        for payment in payments:
+            payments_list.append(OrderPayment(order_id=payment.order_id,customer_id=payment.customer_id,amount=payment.amount,date=payment.date))
+        return {'status_code':200,'payments':payments_list}
+    except Exception as e:
+        raise HTTPException(status_code=400,detail="Could not fetch payments")
 
     
 

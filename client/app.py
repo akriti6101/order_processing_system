@@ -2,13 +2,29 @@ import streamlit as st
 import requests
 from router.routes import CUSTOMERS_ROUTE,ITEMS_ROUTE
 from utils.helper import get_customers_id,get_items,place_order,get_orders_id,\
-    get_order_details,get_all_details,get_my_orders,delete_order
+    get_order_details,get_all_details,get_my_orders,delete_order,make_payment
 
 st.title("Welcome to the shopping cart :shopping_cart:")
 
 with st.sidebar:
-    sel_option=st.selectbox(label='Actions',options=('Order Item','All Orders','Order Details','My Orders'),
+    sel_option=st.selectbox(label='Actions',options=('Order Item','All Orders','Order Details','My Orders','Payment'),
                          placeholder="Select an option",index=None)
+if sel_option=='Payment':
+    try:
+        customers_id=get_customers_id()
+        customer_id=st.selectbox(label='Customer ID',options=customers_id,index=None,placeholder='Select your customer id')
+        order_ids=get_orders_id()
+        order_id=st.selectbox(label='Order ID',options=order_ids,index=None,placeholder='Select order id')
+        amount=st.text_input('Enter amount in rupees')
+        payment=st.button('Pay',type='primary')
+        if payment and customer_id and order_id and amount :
+            response=make_payment(customer_id,order_id,amount)
+            st.success(response['message'])
+    except Exception as e:
+        st.error(f'Could not make payment !,{e}')
+
+
+
 if sel_option=='Order Item':
     try:
         customers_id=get_customers_id()

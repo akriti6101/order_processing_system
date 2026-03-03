@@ -1,5 +1,5 @@
 from init import db_con_obj, base
-from sqlalchemy import Column, String, Float, ForeignKey
+from sqlalchemy import Column, String, Float, ForeignKey,DateTime
 from sqlalchemy.orm import relationship
 
 class OrderItems(base):
@@ -35,6 +35,17 @@ class Orders(base):
     order_id = Column(String, primary_key=True)
     customer_id = Column(String, ForeignKey("customers.customer_id"))
     status = Column(String)
+    total_amount=Column(Float)
 
     customer = relationship("Customers", back_populates="orders")
     items = relationship("Items", secondary="order_items", back_populates="orders")
+
+
+class Payment(base):
+    __tablename__='payments'
+    pid=Column(String,primary_key=True)
+    order_id=Column(String,ForeignKey("orders.order_id"))
+    customer_id=Column(String,ForeignKey("customers.customer_id"))
+    amount=Column(Float)
+    date=Column(String)
+

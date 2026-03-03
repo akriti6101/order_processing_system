@@ -1,7 +1,8 @@
 import requests
 import pandas as pd
+from datetime import datetime
 from router.routes import CUSTOMERS_ROUTE,ITEMS_ROUTE,PLACE_ORDER_ROUTE,\
-    ALL_ORDERS_ROUTE,ORDER_DETAIL_ROUTE,CUSTOMER_ORDER_ROUTE,CANCEL_ORDER_ROUTE
+    ALL_ORDERS_ROUTE,ORDER_DETAIL_ROUTE,CUSTOMER_ORDER_ROUTE,CANCEL_ORDER_ROUTE,ORDER_PAYMENT_ROUTE
 
 def get_customers_id():
     try:
@@ -24,7 +25,10 @@ def get_items():
 
 def place_order(customer_id,items):
     try:
-        data={'customer_id':customer_id,'items':items}
+        print(items[0]['price'])
+        total_amount=sum([item['price'] for item in items])
+        data={'customer_id':customer_id,'items':items,'total_amount':total_amount}
+        print(data)
         response=requests.post(PLACE_ORDER_ROUTE,json=data)
         response=response.json()
         print(response)
@@ -88,6 +92,18 @@ def delete_order(customer_id,order_id):
         url=CANCEL_ORDER_ROUTE.format(customer_id=customer_id,order_id=order_id)
         print(url)
         response=requests.delete(url)
+        response=response.json()
+        return response
+    except Exception as e:
+        raise e
+    
+def make_payment(customer_id,order_id,amount):
+    try:
+        url=ORDER_PAYMENT_ROUTE
+        print(url)
+        data={'order_id':order_id,'customer_id':customer_id,'amount':amount,'date':datetime.now().strftime('%H:%M:%S-%d/%m/%y')}
+        print(data)
+        response=requests.post(url,json=data)
         response=response.json()
         return response
     except Exception as e:
